@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/libp2p/go-libp2p-core/peer"
-	mh "github.com/multiformats/go-multihash"
-	"math/rand"
 	"time"
 
 	kb "github.com/libp2p/go-libp2p-kbucket"
@@ -47,16 +45,4 @@ func (c Crawler) Start() {
 		cp := kb.CommonPrefixLen(kb.ConvertKey(randomPeerId), kb.ConvertKey(string(p)))
 		fmt.Println(key, cp)
 	}
-}
-
-func createRandomPeerId() (string, error) {
-	buf := make([]byte, 32)
-	rand.Read(buf)
-
-	peerIdBytes, err := mh.Encode(buf, mh.SHA2_256)
-	if err != nil {
-		return "", err
-	}
-	return string(peerIdBytes), nil
-	//return base58.Encode(peerIdBytes), nil
 }

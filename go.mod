@@ -13,4 +13,5 @@ require (
 	github.com/mr-tron/base58 v1.1.3
 	github.com/multiformats/go-multiaddr v0.2.1
 	github.com/multiformats/go-multihash v0.0.13
+	github.com/stretchr/testify v1.5.1
 )
