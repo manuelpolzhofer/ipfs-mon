@@ -2,11 +2,11 @@ package main
 
 import (
 	"bufio"
+	kb "github.com/libp2p/go-libp2p-kbucket"
+	mh "github.com/multiformats/go-multihash"
 	"log"
 	"math/rand"
 	"os"
-	mh "github.com/multiformats/go-multihash"
-	kb "github.com/libp2p/go-libp2p-kbucket"
 )
 
 func ReadFile(path string) []string {

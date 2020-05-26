@@ -9,22 +9,21 @@ import (
 	kb "github.com/libp2p/go-libp2p-kbucket"
 )
 
-
 type Peer struct {
-	id peer.ID
-	lastSeen time.Time
+	id           peer.ID
+	lastSeen     time.Time
 	commonPrefix int
 }
 
 type Crawler struct {
-	node *Node
-	peersMap map[string] *Peer
+	node        *Node
+	peersMap    map[string]*Peer
 	maxRoutines int
 }
 
 func NewCrawler(node *Node) *Crawler {
 	m := make(map[string]*Peer)
-	return &Crawler{node:node, peersMap:m, maxRoutines: 300}
+	return &Crawler{node: node, peersMap: m, maxRoutines: 300}
 }
 
 func (c *Crawler) Start() error {
@@ -48,12 +47,12 @@ func (c *Crawler) Start() error {
 	}
 
 	for {
-		p := <- peerCh
+		p := <-peerCh
 
 		if _, exists := c.peersMap[string(p)]; !exists {
 			cp := kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(string(p)))
 			fmt.Println("New Peer: ", p.String(), "Common Prefix:", cp)
-			c.peersMap[string(p)] = &Peer{id:p,lastSeen:time.Now(),commonPrefix:cp}
+			c.peersMap[string(p)] = &Peer{id: p, lastSeen: time.Now(), commonPrefix: cp}
 			fmt.Println("Peers in Zone: ", len(c.peersMap))
 		}
 		if len(c.peersMap) > 1000 {
@@ -71,14 +70,12 @@ func (c *Crawler) crawlRoutine(ctx context.Context, basePeer string, bits int, p
 	}
 }
 
-
 func (c *Crawler) getClosestPeers(ctx context.Context, peerId, basePeer string, bits int, peerCh chan peer.ID) {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch, err := c.node.ipfsNode.DHT.WAN.GetClosestPeers(ctx, peerId)
 	if err != nil {
 		panic(fmt.Errorf("get closest peers failed: %s", err))
 	}
-
 
 	time.Sleep(15 * time.Second)
 	cancel()
