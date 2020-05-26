@@ -58,8 +58,8 @@ func NewNode() *Node {
 		//"/ip4/192.168.178.30/tcp/4001/p2p/QmNycBemcRtQjLS3SYvzFqNNWVyBaroK2qpKutjHbSexrc",
 	}
 
-	//peers := ReadFile("peers.txt")
-	//bootstrapNodes = append(bootstrapNodes, peers...)
+	peers := ReadFile("peers")
+	bootstrapNodes = append(bootstrapNodes, peers...)
 
 	ipfs, err := coreapi.NewCoreAPI(node)
 

@@ -4,6 +4,6 @@ func main() {
 	node := NewNode()
 	defer node.cancel()
 
-	crawler := &Crawler{node: node}
+	crawler := NewCrawler(node)
 	crawler.Start()
 }

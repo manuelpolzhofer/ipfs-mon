@@ -30,8 +30,7 @@ func ReadFile(path string) []string {
 }
 
 // the Kademlia DHT implementation uses the sha256 of a PID as key
-// the method finds a peer ID which has a commonPrefix in the DHT-ID by brute force the sha256-hash function
-// estimate: 15 bits ~ 27ms
+// the method finds a peer ID which shares a common prefix in the DHT-ID by brute force the sha256-hash function
 func findPeerWithCommonDHTID(basePeer string, bits int) string {
 	var p string
 	for kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(p)) < bits {
@@ -42,7 +41,6 @@ func findPeerWithCommonDHTID(basePeer string, bits int) string {
 	return p
 }
 
-
 func createRandomPeerId() (string, error) {
 	buf := make([]byte, 32)
 	rand.Read(buf)
@@ -52,5 +50,4 @@ func createRandomPeerId() (string, error) {
 		return "", err
 	}
 	return string(peerIdBytes), nil
-	//return base58.Encode(peerIdBytes), nil
 }
