@@ -2,6 +2,8 @@ package main
 
 import (
 	"bufio"
+	"fmt"
+	"github.com/libp2p/go-libp2p-core/peer"
 	kb "github.com/libp2p/go-libp2p-kbucket"
 	mh "github.com/multiformats/go-multihash"
 	"log"
@@ -50,4 +52,12 @@ func createRandomPeerId() (string, error) {
 		return "", err
 	}
 	return string(peerIdBytes), nil
+}
+
+func peerIDtoBase58(peerID string) string {
+	peerBase58, err := peer.IDFromString(peerID)
+	if err != nil {
+		panic(fmt.Errorf("error convert base peer: %s", err))
+	}
+	return peerBase58.String()
 }

@@ -28,10 +28,10 @@ type Node struct {
 	cancel   context.CancelFunc
 }
 
-func NewNode() *Node {
+func NewNode(ctx context.Context) *Node {
 	fmt.Println("Setup New IPFS Node")
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 
 	// Spawn a node using a temporary path, creating a temporary repo for the run
 	node, err := spawnEphemeral(ctx)
@@ -58,8 +58,8 @@ func NewNode() *Node {
 		//"/ip4/192.168.178.30/tcp/4001/p2p/QmNycBemcRtQjLS3SYvzFqNNWVyBaroK2qpKutjHbSexrc",
 	}
 
-	peers := ReadFile("peers")
-	bootstrapNodes = append(bootstrapNodes, peers...)
+	//peers := ReadFile("peers")
+	//bootstrapNodes = append(bootstrapNodes, peers...)
 
 	ipfs, err := coreapi.NewCoreAPI(node)
 
