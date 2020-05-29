@@ -28,13 +28,13 @@ type Node struct {
 	cancel   context.CancelFunc
 }
 
-func NewNode(ctx context.Context) *Node {
+func NewNode(ctx context.Context, basePeer string) *Node {
 	fmt.Println("Setup New IPFS Node")
 
 	ctx, cancel := context.WithCancel(ctx)
 
 	// Spawn a node using a temporary path, creating a temporary repo for the run
-	node, err := spawnEphemeral(ctx)
+	node, err := spawnEphemeral(ctx, basePeer)
 	if err != nil {
 		panic(fmt.Errorf("failed to spawn ephemeral node: %s", err))
 	}
@@ -53,13 +53,10 @@ func NewNode(ctx context.Context) *Node {
 		"/ip4/138.201.67.220/tcp/4001/p2p/QmNSYxZAiJHeLdkBg38roksAR9So7Y5eojks1yjEcUtZ7i",
 		"/ip4/138.201.68.74/tcp/4001/p2p/QmdnXwLrC8p1ueiq2Qya8joNvk3TVVDAut7PrikmZwubtR",
 		"/ip4/94.130.135.167/tcp/4001/p2p/QmUEMvxS2e7iDrereVYc5SWPauXPyNwxcy9BXZrC1QTcHE",
-
-		// You can add more nodes here, for example, another IPFS node you might have running locally, mine was:
-		//"/ip4/192.168.178.30/tcp/4001/p2p/QmNycBemcRtQjLS3SYvzFqNNWVyBaroK2qpKutjHbSexrc",
 	}
 
-	//peers := ReadFile("peers")
-	//bootstrapNodes = append(bootstrapNodes, peers...)
+	// peers := ReadFile("peers")
+	// bootstrapNodes = append(bootstrapNodes, peers...)
 
 	ipfs, err := coreapi.NewCoreAPI(node)
 
@@ -114,7 +111,7 @@ func createTempRepo(ctx context.Context) (string, error) {
 }
 
 // Creates an IPFS node
-func createNode(ctx context.Context, repoPath string) (*core.IpfsNode, error) {
+func createNode(ctx context.Context, repoPath, basePeer string) (*core.IpfsNode, error) {
 	// Open the repo
 	repo, err := fsrepo.Open(repoPath)
 	if err != nil {
@@ -128,8 +125,10 @@ func createNode(ctx context.Context, repoPath string) (*core.IpfsNode, error) {
 		Routing: libp2p.DHTOption, // This option sets the node to be a full DHT node (both fetching and storing DHT Records)
 		//Routing: libp2p.DHTClientOption, // This option sets the node to be a client DHT node (only fetching records)
 		Repo: repo,
+		//DisableEncryptedConnections: true,
 	}
 
+	// todo create ipfs node in the same zone as basePeer to speed up search
 	node, err := core.NewNode(ctx, nodeOptions)
 	if err != nil {
 		return nil, err
@@ -140,7 +139,7 @@ func createNode(ctx context.Context, repoPath string) (*core.IpfsNode, error) {
 }
 
 // Spawns a node to be used just for this run (i.e. creates a tmp repo)
-func spawnEphemeral(ctx context.Context) (*core.IpfsNode, error) {
+func spawnEphemeral(ctx context.Context, basePeer string) (*core.IpfsNode, error) {
 	if err := setupPlugins(""); err != nil {
 		return nil, err
 	}
@@ -152,7 +151,7 @@ func spawnEphemeral(ctx context.Context) (*core.IpfsNode, error) {
 	}
 
 	// Spawning an ephemeral IPFS node
-	return createNode(ctx, repoPath)
+	return createNode(ctx, repoPath, basePeer)
 }
 
 func connectToPeers(ctx context.Context, ipfs icore.CoreAPI, peers []string) error {

@@ -6,9 +6,12 @@ import (
 	"github.com/libp2p/go-libp2p-core/peer"
 	kb "github.com/libp2p/go-libp2p-kbucket"
 	mh "github.com/multiformats/go-multihash"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
+	"strconv"
+	"time"
 )
 
 func ReadFile(path string) []string {
@@ -31,6 +34,17 @@ func ReadFile(path string) []string {
 	return lines
 }
 
+func writeResultJSON(b []byte) {
+	fileName := "ipfs-mon-crawl-" + strconv.Itoa(int(time.Now().Unix())) + ".json"
+
+	fmt.Println("generated file with results: ", fileName)
+	err := ioutil.WriteFile(fileName, b, 0644)
+	if err != nil {
+		panic(fmt.Errorf("error convert base peer: %s", err))
+	}
+
+}
+
 // the Kademlia DHT implementation uses the sha256 of a PID as key
 // the method finds a peer ID which shares a common prefix in the DHT-ID by brute force the sha256-hash function
 func findPeerWithCommonDHTID(basePeer string, bits int) string {
@@ -39,7 +53,6 @@ func findPeerWithCommonDHTID(basePeer string, bits int) string {
 		p, _ = createRandomPeerId()
 
 	}
-
 	return p
 }
 

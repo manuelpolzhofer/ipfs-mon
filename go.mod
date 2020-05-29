@@ -9,6 +9,7 @@ require (
 	github.com/ipfs/interface-go-ipfs-core v0.2.7
 	github.com/libp2p/go-libp2p-core v0.5.2
 	github.com/libp2p/go-libp2p-kbucket v0.4.1
+	github.com/libp2p/go-libp2p-peer v0.2.0
 	github.com/libp2p/go-libp2p-peerstore v0.2.3
 	github.com/mr-tron/base58 v1.1.3
 	github.com/multiformats/go-multiaddr v0.2.1
