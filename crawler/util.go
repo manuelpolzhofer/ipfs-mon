@@ -1,4 +1,4 @@
-package main
+package crawler
 
 import (
 	"bufio"
@@ -37,7 +37,7 @@ func ReadFile(path string) []string {
 func writeResultJSON(b []byte) {
 	fileName := "ipfs-mon-crawl-" + strconv.Itoa(int(time.Now().Unix())) + ".json"
 
-	fmt.Println("generated file with results: ", fileName)
+	fmt.Println("Generated file with results: ", fileName)
 	err := ioutil.WriteFile(fileName, b, 0644)
 	if err != nil {
 		panic(fmt.Errorf("error convert base peer: %s", err))

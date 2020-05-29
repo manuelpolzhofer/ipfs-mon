@@ -1,4 +1,4 @@
-package main
+package crawler
 
 import (
 	"context"
@@ -12,19 +12,22 @@ import (
 )
 
 type Cluster struct {
-	peersMap map[string]*Peer
-	peerCh   chan peer.ID
-	bits     int
-	maxPeers int
-	numNodes int
-	basePeer string
-	ctx      context.Context
-	cancel   context.CancelFunc
+	peersMap  map[string]*Peer
+	peerCh    chan peer.ID
+	bits      int
+	maxPeers  int
+	numNodes  int
+	basePeer  string
+	workers   int
+	ctx       context.Context
+	cancel    context.CancelFunc
+	startTime time.Time
+	endTime   time.Time
 }
 
-func NewCluster() *Cluster {
+func NewCluster(numNodes, workers, bits, maxPeers int) *Cluster {
 	m := make(map[string]*Peer)
-	return &Cluster{peersMap: m, bits: 6, numNodes: 1, maxPeers: 10000}
+	return &Cluster{peersMap: m, numNodes: numNodes, bits: bits, workers: workers, maxPeers: maxPeers}
 }
 
 func (c *Cluster) Start(ctx context.Context) error {
@@ -32,26 +35,30 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 	c.peerCh = make(chan peer.ID, 1000)
 
+	c.startTime = time.Now()
+
 	node := NewNode(ctx, "")
 	defer node.cancel()
-	crawler := NewCrawler(node)
+	worker := NewWorker(node, c.workers)
 
 	// use peerID of first node as basePeer
 	// the first n bits of the basePeer are used for finding other peers in the zone
 	c.basePeer = string(node.ipfsNode.Identity)
 
-	crawler.Start(ctx, c.peerCh, c.basePeer, c.bits)
+	fmt.Println("BasePeer:", peerIDtoBase58(c.basePeer))
+
+	worker.Start(ctx, c.peerCh, c.basePeer, c.bits)
 
 	for i := 0; i < c.numNodes-1; i++ {
-		go func(ctx context.Context, peerCh chan peer.ID, basePeer string, bits int) {
+		go func(ctx context.Context, peerCh chan peer.ID, basePeer string, bits, workers int) {
 
 			node := NewNode(ctx, basePeer)
 			defer node.cancel()
-			crawler := NewCrawler(node)
+			worker := NewWorker(node, workers)
 
-			crawler.Start(ctx, peerCh, basePeer, bits)
+			worker.Start(ctx, peerCh, basePeer, bits)
 			<-ctx.Done()
-		}(c.ctx, c.peerCh, c.basePeer, c.bits)
+		}(c.ctx, c.peerCh, c.basePeer, c.bits, c.workers)
 	}
 
 	c.listenForPeers()
@@ -88,11 +95,15 @@ func (c *Cluster) handleNewPeer(p peer.ID) {
 	if len(c.peersMap) > c.maxPeers {
 		fmt.Println("Finish. Reached Max Peers in Zone: ", len(c.peersMap))
 		c.cancel()
+		c.handleShutdown()
 		return
 	}
 }
 
 func (c *Cluster) handleShutdown() {
+	c.endTime = time.Now()
+	totalTime := time.Since(c.startTime)
+	fmt.Println("Total Crawl Time:", totalTime)
 	fmt.Println("Create JSON file")
 	b, err := json.Marshal(c)
 	if err != nil {

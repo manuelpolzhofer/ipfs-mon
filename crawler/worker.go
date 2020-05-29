@@ -1,4 +1,4 @@
-package main
+package crawler
 
 import (
 	"context"
@@ -9,29 +9,29 @@ import (
 	kb "github.com/libp2p/go-libp2p-kbucket"
 )
 
-type Crawler struct {
+type Worker struct {
 	node        *Node
 	maxRoutines int
 }
 
-func NewCrawler(node *Node) *Crawler {
-	return &Crawler{node: node, maxRoutines: 400}
+func NewWorker(node *Node, maxRoutines int) *Worker {
+	return &Worker{node: node, maxRoutines: maxRoutines}
 }
 
-func (c *Crawler) Start(ctx context.Context, peerCh chan peer.ID, basePeer string, bits int) error {
+func (c *Worker) Start(ctx context.Context, peerCh chan peer.ID, basePeer string, bits int) error {
 	fmt.Println("start crawling")
 	for i := 0; i < c.maxRoutines; i++ {
-		go c.crawlRoutine(ctx, basePeer, bits, peerCh)
+		go c.workRoutine(ctx, basePeer, bits, peerCh)
 	}
 
 	return nil
 }
 
-func (c *Crawler) crawlRoutine(ctx context.Context, basePeer string, bits int, peerCh chan peer.ID) {
+func (c *Worker) workRoutine(ctx context.Context, basePeer string, bits int, peerCh chan peer.ID) {
 	for {
 		select {
 		case <-ctx.Done():
-			fmt.Println("stop crawl Routine")
+			fmt.Println("stop worker")
 			return
 		default:
 			p := findPeerWithCommonDHTID(basePeer, bits)
@@ -40,7 +40,7 @@ func (c *Crawler) crawlRoutine(ctx context.Context, basePeer string, bits int, p
 	}
 }
 
-func (c *Crawler) getClosestPeers(ctx context.Context, peerId, basePeer string, bits int, peerCh chan peer.ID) {
+func (c *Worker) getClosestPeers(ctx context.Context, peerId, basePeer string, bits int, peerCh chan peer.ID) {
 	ctx, cancel := context.WithCancel(context.Background())
 	ch, err := c.node.ipfsNode.DHT.WAN.GetClosestPeers(ctx, peerId)
 	if err != nil {
