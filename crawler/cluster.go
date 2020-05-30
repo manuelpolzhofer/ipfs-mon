@@ -7,12 +7,14 @@ import (
 	"fmt"
 	"github.com/libp2p/go-libp2p-core/peer"
 	kb "github.com/libp2p/go-libp2p-kbucket"
+	"github.com/manuelpolzhofer/ipfs-mon/stats"
+	"github.com/manuelpolzhofer/ipfs-mon/zone"
 	"os"
 	"time"
 )
 
 type Cluster struct {
-	peersMap       map[string]*Peer
+	peersMap       map[string]*zone.Peer
 	peerCh         chan peer.ID
 	bits           int
 	maxPeers       int
@@ -29,16 +31,11 @@ type Cluster struct {
 }
 
 func NewCluster(numNodes, workers, bits, maxPeers int, basePeer, peersFile string) *Cluster {
-	m := make(map[string]*Peer)
+	m := make(map[string]*zone.Peer)
 
 	if basePeer != "" {
-		peerID, err := peer.Decode(basePeer)
-		if err != nil {
-			panic(fmt.Errorf("basePeer Id incorrect: %s", err))
-		}
-		basePeer = string(peerID)
+		basePeer = fromBase58(basePeer)
 	}
-
 	return &Cluster{peersMap: m, numNodes: numNodes, bits: bits, workers: workers, maxPeers: maxPeers, basePeer: basePeer, peersFile: peersFile}
 }
 
@@ -57,7 +54,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 		c.basePeer = string(node.ipfsNode.Identity)
 	}
 
-	fmt.Println("BasePeer:", peerIDtoBase58(c.basePeer))
+	fmt.Println("BasePeer:", toBase58(c.basePeer))
 	fmt.Println("IPFS Node Peer ID:", peer.Encode(node.ipfsNode.Identity))
 
 	defer node.cancel()
@@ -102,7 +99,7 @@ func (c *Cluster) handleNewPeer(p peer.ID) {
 	key := p.String()
 	if _, exists := c.peersMap[key]; !exists {
 		cp := kb.CommonPrefixLen(kb.ConvertKey(c.basePeer), kb.ConvertKey(string(p)))
-		c.peersMap[key] = NewPeer(p, time.Now(), cp)
+		c.peersMap[key] = zone.NewPeer(p, time.Now(), cp)
 
 		if len(c.peersMap) == 1 {
 			c.firstPeerFound = time.Now()
@@ -138,17 +135,13 @@ func (c *Cluster) handleShutdown() {
 }
 
 func (c *Cluster) MarshalJSON() ([]byte, error) {
-	return json.Marshal(&struct {
-		InZone    int              `json:"total_peers_in_zone"`
-		Bits      int              `json:"bits"`
-		BasePeer  string           `json:"base_peer"`
-		BaseKADId string           `json:"base_kad_id"`
-		PeersMap  map[string]*Peer `json:"peers"`
-	}{
+	return json.Marshal(&stats.Result{
 		InZone:    len(c.peersMap),
 		Bits:      c.bits,
-		BasePeer:  peerIDtoBase58(c.basePeer),
+		BasePeer:  toBase58(c.basePeer),
 		BaseKADId: "0x" + hex.EncodeToString(kb.ConvertKey(c.basePeer)),
 		PeersMap:  c.peersMap,
+		StartTime: c.firstPeerFound,
+		EndTime:   c.endTime,
 	})
 }

@@ -1,4 +1,4 @@
-package crawler
+package zone
 
 import (
 	"encoding/json"

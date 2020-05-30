@@ -66,10 +66,18 @@ func createRandomPeerId() (string, error) {
 	return string(peerIdBytes), nil
 }
 
-func peerIDtoBase58(peerID string) string {
-	peerBase58, err := peer.IDFromString(peerID)
+func toBase58(peerID string) string {
+	id, err := peer.IDFromString(peerID)
 	if err != nil {
 		panic(fmt.Errorf("error convert base peer: %s", err))
 	}
-	return peerBase58.String()
+	return id.Pretty()
+}
+
+func fromBase58(peerID string) string {
+	id, err := peer.Decode(peerID)
+	if err != nil {
+		panic(fmt.Errorf("basePeer Id incorrect: %s", err))
+	}
+	return string(id)
 }
