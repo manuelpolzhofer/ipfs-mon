@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/libp2p/go-libp2p-core/peer"
 	kb "github.com/libp2p/go-libp2p-kbucket"
-	"math/rand"
 	"sync"
 	"time"
 )
@@ -44,30 +43,18 @@ func (c *Worker) workRoutine(ctx context.Context, basePeer string, bits int, pee
 }
 
 func (c *Worker) getClosestPeers(ctx context.Context, peerId, basePeer string, bits int, peerCh chan peer.ID, peersMap map[string]peer.ID) {
-	// todo figure out optimized tuning for getClosestPeer timeout
-	d := rand.Intn(100) + 50
-	ctx, cancel := context.WithTimeout(ctx, time.Duration(d)*time.Second)
-	defer cancel()
-
+	ctx, cancel := context.WithCancel(context.Background())
 	ch, err := c.node.ipfsNode.DHT.WAN.GetClosestPeers(ctx, peerId)
-
 	if err != nil {
-		return
+		panic(fmt.Errorf("get closest peers failed: %s", err))
 	}
 
-	for {
-		select {
-		case p := <-ch:
-			key := p.String()
-			if _, exists := peersMap[key]; !exists {
-				peersMap[key] = p
-				if kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(string(p))) >= bits {
-					peerCh <- p
-				}
-			}
+	time.Sleep(3 * time.Second)
+	cancel()
 
-		case <-ctx.Done():
-			return
+	for peer := range ch {
+		if kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(string(peer))) >= bits {
+			peerCh <- peer
 		}
 	}
 }
