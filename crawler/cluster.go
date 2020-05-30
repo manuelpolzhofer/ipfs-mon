@@ -19,6 +19,7 @@ type Cluster struct {
 	numNodes       int
 	basePeer       string
 	workers        int
+	peersFile      string
 	ctx            context.Context
 	cancel         context.CancelFunc
 	firstPeerFound time.Time
@@ -27,7 +28,7 @@ type Cluster struct {
 	lastNewPeer    time.Time
 }
 
-func NewCluster(numNodes, workers, bits, maxPeers int, basePeer string) *Cluster {
+func NewCluster(numNodes, workers, bits, maxPeers int, basePeer, peersFile string) *Cluster {
 	m := make(map[string]*Peer)
 
 	if basePeer != "" {
@@ -38,7 +39,7 @@ func NewCluster(numNodes, workers, bits, maxPeers int, basePeer string) *Cluster
 		basePeer = string(peerID)
 	}
 
-	return &Cluster{peersMap: m, numNodes: numNodes, bits: bits, workers: workers, maxPeers: maxPeers, basePeer: basePeer}
+	return &Cluster{peersMap: m, numNodes: numNodes, bits: bits, workers: workers, maxPeers: maxPeers, basePeer: basePeer, peersFile: peersFile}
 }
 
 func (c *Cluster) Start(ctx context.Context) error {
@@ -48,7 +49,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 
 	c.startTime = time.Now()
 
-	node := NewNode(ctx, c.basePeer)
+	node := NewNode(ctx, c.basePeer, c.peersFile)
 
 	// use peerID of first node as basePeer if not set
 	// the first n bits of the basePeer are used for finding other peers in the zone
@@ -57,7 +58,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	}
 
 	fmt.Println("BasePeer:", peerIDtoBase58(c.basePeer))
-	fmt.Println("IPFS Node Peer ID:", string(node.ipfsNode.Identity))
+	fmt.Println("IPFS Node Peer ID:", peer.Encode(node.ipfsNode.Identity))
 
 	defer node.cancel()
 	worker := NewWorker(node, c.workers)
@@ -67,7 +68,7 @@ func (c *Cluster) Start(ctx context.Context) error {
 	for i := 0; i < c.numNodes-1; i++ {
 		go func(ctx context.Context, peerCh chan peer.ID, basePeer string, bits, workers int) {
 
-			node := NewNode(ctx, basePeer)
+			node := NewNode(ctx, basePeer, c.peersFile)
 			defer node.cancel()
 			worker := NewWorker(node, workers)
 

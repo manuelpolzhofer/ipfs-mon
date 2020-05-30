@@ -28,7 +28,7 @@ type Node struct {
 	cancel   context.CancelFunc
 }
 
-func NewNode(ctx context.Context, basePeer string) *Node {
+func NewNode(ctx context.Context, basePeer, peersFile string) *Node {
 	fmt.Println("Setup New IPFS Node")
 
 	ctx, cancel := context.WithCancel(ctx)
@@ -55,8 +55,15 @@ func NewNode(ctx context.Context, basePeer string) *Node {
 		"/ip4/94.130.135.167/tcp/4001/p2p/QmUEMvxS2e7iDrereVYc5SWPauXPyNwxcy9BXZrC1QTcHE",
 	}
 
-	// peers := ReadFile("peers")
-	// bootstrapNodes = append(bootstrapNodes, peers...)
+	if peersFile != "" {
+		peersFromFile, err := ReadFile("peers")
+		if err == nil {
+			fmt.Println("use additional peers from file to bootstrap")
+			bootstrapNodes = append(bootstrapNodes, peersFromFile...)
+		} else {
+			fmt.Println("Could not read files from peersFile. Continue without additional peers for bootstrap")
+		}
+	}
 
 	ipfs, err := coreapi.NewCoreAPI(node)
 

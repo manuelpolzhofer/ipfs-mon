@@ -7,19 +7,18 @@ import (
 	kb "github.com/libp2p/go-libp2p-kbucket"
 	mh "github.com/multiformats/go-multihash"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"os"
 	"strconv"
 	"time"
 )
 
-func ReadFile(path string) []string {
+func ReadFile(path string) ([]string, error) {
 	var lines []string
 
 	file, err := os.Open(path)
 	if err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("could not read peers file: %s", err)
 	}
 	defer file.Close()
 
@@ -29,9 +28,9 @@ func ReadFile(path string) []string {
 	}
 
 	if err := scanner.Err(); err != nil {
-		log.Fatal(err)
+		return nil, fmt.Errorf("could not read peers file: %s", err)
 	}
-	return lines
+	return lines, nil
 }
 
 func writeResultJSON(b []byte) {

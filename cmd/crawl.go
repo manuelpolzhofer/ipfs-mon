@@ -11,11 +11,12 @@ import (
 )
 
 var (
-	bits     int
-	workers  int
-	nodes    int
-	maxPeers int
-	basePeer string
+	bits      int
+	workers   int
+	nodes     int
+	maxPeers  int
+	basePeer  string
+	peersFile string
 )
 
 const (
@@ -31,6 +32,7 @@ func init() {
 	crawlCmd.PersistentFlags().IntVar(&workers, "workers", defaultWorker, "define the amount of workers per node for the crawl")
 	crawlCmd.PersistentFlags().IntVar(&nodes, "nodes", defaultNodes, "define the amount of ipfs nodes for the crawl")
 	crawlCmd.PersistentFlags().IntVar(&maxPeers, "maxPeers", defaultMaxPeers, "stop crawling after maxPeers are found in zone")
+	crawlCmd.PersistentFlags().StringVar(&peersFile, "peersFile", "", "provide a file with peers for bootstrapping the DHT")
 	rootCmd.AddCommand(crawlCmd)
 }
 
@@ -55,7 +57,7 @@ var crawlCmd = &cobra.Command{
 		fmt.Println(fmt.Sprintf("Workers per Node: %d ", workers))
 		ctx, cancel := context.WithCancel(context.Background())
 		shutdownHandler(cancel)
-		c := crawler.NewCluster(defaultNodes, workers, bits, maxPeers, basePeer)
+		c := crawler.NewCluster(defaultNodes, workers, bits, maxPeers, basePeer, peersFile)
 
 		c.Start(ctx)
 	},
