@@ -53,8 +53,13 @@ func (c *Worker) getClosestPeers(ctx context.Context, peerId, basePeer string, b
 	cancel()
 
 	for peer := range ch {
-		if kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(string(peer))) >= bits {
-			peerCh <- peer
+		if _, exists := peersMap[string(peer)]; !exists {
+			peersMap[string(peer)] = peer
+
+			if kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(string(peer))) >= bits {
+				peerCh <- peer
+			}
 		}
+
 	}
 }
