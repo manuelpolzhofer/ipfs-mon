@@ -12,17 +12,19 @@ import (
 )
 
 type Cluster struct {
-	peersMap  map[string]*Peer
-	peerCh    chan peer.ID
-	bits      int
-	maxPeers  int
-	numNodes  int
-	basePeer  string
-	workers   int
-	ctx       context.Context
-	cancel    context.CancelFunc
-	startTime time.Time
-	endTime   time.Time
+	peersMap       map[string]*Peer
+	peerCh         chan peer.ID
+	bits           int
+	maxPeers       int
+	numNodes       int
+	basePeer       string
+	workers        int
+	ctx            context.Context
+	cancel         context.CancelFunc
+	firstPeerFound time.Time
+	startTime      time.Time
+	endTime        time.Time
+	lastNewPeer    time.Time
 }
 
 func NewCluster(numNodes, workers, bits, maxPeers int) *Cluster {
@@ -88,8 +90,13 @@ func (c *Cluster) handleNewPeer(p peer.ID) {
 		cp := kb.CommonPrefixLen(kb.ConvertKey(c.basePeer), kb.ConvertKey(string(p)))
 		c.peersMap[key] = NewPeer(p, time.Now(), cp)
 
-		fmt.Println("New Peer: ", p.String(), "Common Prefix:", cp)
+		if len(c.peersMap) == 1 {
+			c.firstPeerFound = time.Now()
+		}
+
+		fmt.Println("New Peer: ", p.String(), "Common Prefix:", cp, "since:", time.Since(c.lastNewPeer))
 		fmt.Println("Peers in Zone: ", len(c.peersMap))
+		c.lastNewPeer = time.Now()
 
 	}
 	if len(c.peersMap) > c.maxPeers {
@@ -103,6 +110,8 @@ func (c *Cluster) handleNewPeer(p peer.ID) {
 func (c *Cluster) handleShutdown() {
 	c.endTime = time.Now()
 	totalTime := time.Since(c.startTime)
+	fmt.Println("Time past since First Peer Found: ", time.Since(c.firstPeerFound))
+	fmt.Println("Time past since last New Peer: ", time.Since(c.lastNewPeer))
 	fmt.Println("Total Crawl Time:", totalTime)
 	fmt.Println("Create JSON file")
 	b, err := json.Marshal(c)
