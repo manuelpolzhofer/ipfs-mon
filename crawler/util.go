@@ -47,10 +47,15 @@ func writeResultJSON(b []byte) {
 // the Kademlia DHT implementation uses the sha256 of a PID as key
 // the method finds a peer ID which shares a common prefix in the DHT-ID by brute force the sha256-hash function
 func findPeerWithCommonDHTID(basePeer string, bits int) string {
-	var p string
+	p, err := createRandomPeerId()
+	if err != nil {
+		panic(fmt.Errorf("failed to create peer id with common prefix: %s", err))
+	}
 	for kb.CommonPrefixLen(kb.ConvertKey(basePeer), kb.ConvertKey(p)) < bits {
-		p, _ = createRandomPeerId()
-
+		p, err = createRandomPeerId()
+		if err != nil {
+			panic(fmt.Errorf("failed to create peer id with common prefix: %s", err))
+		}
 	}
 	return p
 }
