@@ -16,8 +16,8 @@ func TestCreateRandomPeer(t *testing.T) {
 }
 
 func TestFindPeerWithCommonDHTID(t *testing.T) {
-	for i := 0; i < 100; i++ {
-		bits := 15
+	bits := 12
+	for i := 0; i < 1; i++ {
 		basePeer, err := createRandomPeerId()
 		assert.Nil(t, err)
 		peer := findPeerWithCommonDHTID(basePeer, bits)

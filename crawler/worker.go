@@ -15,21 +15,23 @@ type Worker struct {
 	mutex       *sync.Mutex
 }
 
+const reqSleepTime = 3
+
 func NewWorker(node *Node, maxRoutines int) *Worker {
 
 	return &Worker{node: node, maxRoutines: maxRoutines, mutex: &sync.Mutex{}}
 }
 
-func (c *Worker) Start(ctx context.Context, peerCh chan peer.ID, basePeer string, bits int) error {
+func (w *Worker) Start(ctx context.Context, peerCh chan peer.ID, basePeer string, bits int) error {
 	fmt.Println("start crawling")
-	for i := 0; i < c.maxRoutines; i++ {
-		go c.workRoutine(ctx, basePeer, bits, peerCh)
+	for i := 0; i < w.maxRoutines; i++ {
+		go w.workRoutine(ctx, basePeer, bits, peerCh)
 	}
 
 	return nil
 }
 
-func (c *Worker) workRoutine(ctx context.Context, basePeer string, bits int, peerCh chan peer.ID) {
+func (w *Worker) workRoutine(ctx context.Context, basePeer string, bits int, peerCh chan peer.ID) {
 	localPeerMap := make(map[string]peer.ID)
 	for {
 		select {
@@ -37,19 +39,20 @@ func (c *Worker) workRoutine(ctx context.Context, basePeer string, bits int, pee
 			return
 		default:
 			p := findPeerWithCommonDHTID(basePeer, bits)
-			c.getClosestPeers(ctx, p, basePeer, bits, peerCh, localPeerMap)
+			w.getClosestPeers(ctx, p, basePeer, bits, peerCh, localPeerMap)
 		}
 	}
 }
 
-func (c *Worker) getClosestPeers(ctx context.Context, peerId, basePeer string, bits int, peerCh chan peer.ID, peersMap map[string]peer.ID) {
+func (w *Worker) getClosestPeers(ctx context.Context, peerId, basePeer string, bits int, peerCh chan peer.ID, peersMap map[string]peer.ID) {
 	ctx, cancel := context.WithCancel(context.Background())
-	ch, err := c.node.ipfsNode.DHT.WAN.GetClosestPeers(ctx, peerId)
+	ch, err := w.node.ipfsNode.DHT.WAN.GetClosestPeers(ctx, peerId)
+
 	if err != nil {
 		panic(fmt.Errorf("get closest peers failed: %s", err))
 	}
 
-	time.Sleep(3 * time.Second)
+	time.Sleep(reqSleepTime * time.Second)
 	cancel()
 
 	for peer := range ch {
