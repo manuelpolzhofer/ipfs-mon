@@ -33,7 +33,7 @@ Starts a crawl of the IPFS p2p network
 ./ipfs-mon crawl --bits=5 --workers=300 --basePeer=QmbNCbBpuRCCPBEqvpKNT77ngbEqnGfDbPR4YD7HvroU9C
 ```
 
-For a `crawl` the following parameter can be provided
+For a `crawl` the following parameters can be provided
 
 | Param | Desc | 
 | -------- | -------- |
@@ -42,7 +42,7 @@ For a `crawl` the following parameter can be provided
 | --nodes    | total amount of nodes a crawler should spin up|
 | --workers    | total amount of workers per node|
 | --peersFile    | file with additional peers for bootstrapping |
-|--maxPeers|  if the maxPeers amount is reached the crawler stops. (default: 100000) 
+|--maxPeers|  if the maxPeers amount is reached the crawler stops. (default: 100000) |
 
 ### Compare Command
 Compare different results JSON files.
@@ -52,8 +52,11 @@ Compare different results JSON files.
 ./ipfs-mon compare --fileA=ipfs-mon-crawl-1590869793.json --fileB=ipfs-mon-crawl-1590957682.json
 ```
 
-For a `compare` the following parameter can be provided
+For a `compare` the following parameters can be provided
+
+| Param | Desc | 
 | -------- | -------- |
-| --fileA  | JSON result file from a previous crawl |
-| --fileB  | JSON result file from a previous crawl |
+| --basePeer  | the ipfs node uses the first n-bits of the basePeer and runs in the same zone| |
+| --bits    | minimum amount of bits the ipfs nodes needs to have in common with the base peer|
+
 
