@@ -39,7 +39,7 @@ For a `crawl` the following parameters can be provided
 | -------- | -------- |
 | --basePeer  | base58 peerID. the first n-bits of the basePeer are used for the zone. (default: ipfs node peerID)     | |
 | --bits    | minimum amount of bits a found peer needs to have in common with the basePeer|
-| --nodes    | total amount of nodes a crawler should spin up|
+| --nodes    | total amount of nodes a crawler should spin up (currently only support for one node) |
 | --workers    | total amount of workers per node|
 | --peersFile    | file with additional peers for bootstrapping |
 |--maxPeers|  if the maxPeers amount is reached the crawler stops. (default: 100000) |
